@@ -1,0 +1,85 @@
+name: Full DevOps Pipeline
+
+on:
+  push:
+    branches: 
+        -   master
+
+jobs:
+
+  # 1. TESTING STAGE
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies ## needed for node.js
+      run: npm install
+
+    - name: Run unit tests  ## To Tests small parts of your code
+      run: npm test
+
+    - name: Coverage Test ## to test How much of the code is tested 
+      run: npm run coverage
+
+  # 2. SECURITY STAGE
+  security:
+    runs-on: ubuntu-latest
+    needs: test   ## runs only if test passes
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: SonarQube Scan  ## Scans code without running it for bugs
+      uses: SonarSource/sonarcloud-github-action@v4
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    - name: SCA (Snyk) ## Dependency scan for npm vulnerable packages
+      run: |
+        npm install -g snyk
+        snyk test
+
+  # 3. BUILD STAGE
+  build:
+    runs-on: ubuntu-latest
+    needs: security
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker build -t olaranmmy/devops-app:latest.
+
+  # 4. DAST STAGE
+  dast:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run container
+      run: docker run -d -p 3000:80 olaranmmy/devops-app
+
+    - name: DAST Scan (Dynamic Security Test, test for running app)
+      run: |
+        docker run --network="host" owasp/zap2docker-stable zap-baseline.py -t http://localhost:3000
+
+  # 5. PUSH STAGE
+  push:
+    runs-on: ubuntu-latest
+    needs: dast
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Login to DockerHub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Push Image to DockerHub
+      run: docker push olaranmmy/devops-app

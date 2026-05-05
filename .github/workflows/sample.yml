@@ -35,13 +35,22 @@ jobs:
       run: npm install
 
     - name: SonarQube Scan  ## Scans code without running it for bugs
-      uses: SonarSource/sonarcloud-github-action@v2
+      uses: actions/checkout@v4
       with:
-        args: >
-          -Dsonar.organization=${{ secrets.SONAR_ORG }}
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+    - uses: SonarSource/sonarqube-scan-action@v6
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+    # - name: SonarQube Scan  ## Scans code without running it for bugs
+    #   uses: SonarSource/sonarcloud-github-action@v2
+    #   with:
+    #     args: >
+    #       -Dsonar.organization=${{ secrets.SONAR_ORG }}
+    #       -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+    #   env:
+    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     # - name: SCA (Snyk) ## Dependency scan for npm vulnerable packages
     #   run: |

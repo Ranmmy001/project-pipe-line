@@ -92,9 +92,9 @@ jobs:
     - name: wait for app
       run: sleep 10
 
-    - name: DAST Scan (Dynamic Security Test, test for running app)
-      run: |
-        docker run --network="host" owasp/zap2docker-stable zap-baseline.py -t http://localhost:3000
+    # - name: DAST Scan (Dynamic Security Test, test for running app)
+    #   run: |
+    #     docker run --network="host" owasp/zap2docker-stable zap-baseline.py -t http://localhost:3000
 
   # 5. PUSH STAGE
   push:

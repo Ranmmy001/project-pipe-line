@@ -34,11 +34,20 @@ jobs:
     - name: Install dependencies
       run: npm install
 
+    
+    - name: SCA (Snyk) ## Dependency scan for npm vulnerable packages
+      run: |
+        npm install -g snyk
+        snyk test
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+
     - name: SonarQube Scan  ## Scans code without running it for bugs
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-    - uses: SonarSource/sonarqube-scan-action@v6
+    - uses: SonarSource/sonarqube-scan-action@v6  ## hosted on ec2 instance instaed of sonarcloud
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
@@ -51,13 +60,6 @@ jobs:
     #       -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
     #   env:
     #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-    # - name: SCA (Snyk) ## Dependency scan for npm vulnerable packages
-    #   run: |
-    #     npm install -g snyk
-    #     snyk test
-    #   env:
-    #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
 
   # 3. BUILD STAGE
